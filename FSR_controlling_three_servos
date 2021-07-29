@@ -1,0 +1,117 @@
+#include <Servo.h>
+
+Servo myservo;  // create servo object to control a servo
+Servo sec_servo;
+Servo third_servo;
+// twelve servo objects can be created on most boards
+
+int pos1 = 0;    // variable to store the servo position
+int pos2 = 0;
+int pos3 = 0;
+
+int fsrPin = 0;     // top FSR connected to a0
+int fsrPin2 = 2; //bottom connected to a1
+int fsrPin3 = 4; //middle connected to a4
+
+int fsrReading;     // the analog reading from the FSR=
+int fsrReading2;
+int fsrReading3;
+
+void setup() {
+  // put your setup code here, to run once:
+  myservo.attach(9);
+  sec_servo.attach(10);
+  third_servo.attach(11);
+  myservo.write(pos1);
+  sec_servo.write(pos2);
+  third_servo.write(pos3);
+  Serial.begin(9600); 
+  Serial.print("Setting up\n");  
+}
+
+void loop() {
+
+  // put your main code here, to run repeatedly:
+  fsrReading = analogRead(fsrPin);  
+  fsrReading2 = analogRead(fsrPin2);
+  fsrReading3 = analogRead(fsrPin3);
+ 
+  Serial.print("First analog reading = ");
+  Serial.println(fsrReading);     // the raw analog reading
+  Serial.print("Second analog reading = ");
+  Serial.println(fsrReading2);     // the raw analog reading
+    Serial.print("Third analog reading = ");
+  Serial.println(fsrReading3);     // the raw analog reading
+
+//unsupported back/middle servo
+  if (fsrReading <20 && fsrReading2 < 20 && fsrReading3 < 20){
+    Serial.println("unsupported back position");
+        pos1 = 0;
+        myservo.write(pos1);
+        pos2 = 0;
+        sec_servo.write(pos2);
+        pos3 = 90;
+        third_servo.write(pos3);
+        delay(100);
+  }
+  else{
+   int pressure_ratio = 1;
+   if ( fsrReading != 0 && fsrReading2 != 0){
+      pressure_ratio = fsrReading/fsrReading2;
+   }
+   else if (fsrReading == 0 && fsrReading2 != 0){
+      pressure_ratio = 0.1;
+   }
+   else if (fsrReading2 == 0 && fsrReading != 0){
+      pressure_ratio = 10;
+   }
+   else {
+    pressure_ratio = 1;
+    Serial.println("both top and bottom FSRs are 0");
+   }
+   Serial.print("This is the pressure ratio:");
+   Serial.println(pressure_ratio);
+
+   if (pressure_ratio == 1){
+        Serial.println("this is the correct posture");
+        pos1 = 0;
+        myservo.write(pos1);
+        pos2 = 0;
+        sec_servo.write(pos2);
+        pos3 = 0;
+        third_servo.write(pos3);
+        delay(100);
+      }
+      else if (pressure_ratio >= 0.5 && pressure_ratio <= 2){
+        Serial.println("within optimal range");
+        pos1 = 0;
+        myservo.write(pos1);
+        pos2 = 0;
+        sec_servo.write(pos2);
+        pos3 = 0;
+        third_servo.write(pos3);
+        delay(100);
+      }
+      else if (pressure_ratio > 5 && fsrReading >= 100){
+        Serial.println("slouching: top fsr is greater than bottom - top servo pops up");
+        pos1 = 90;    
+        myservo.write(pos1);
+        pos2 = 0; 
+        sec_servo.write(pos2);
+        pos3 = 0;
+        third_servo.write(pos3);
+        delay(100);
+      }
+      else if(pressure_ratio < 0.2 && fsrReading2 >= 100){
+        Serial.println("hunching: bottom is greater than top - bottom servo pops up");
+        pos1 = 0;    
+        myservo.write(pos1);
+        pos2 = 90; 
+        sec_servo.write(pos2);
+        pos3 = 0;
+        third_servo.write(pos3);
+        delay(100); 
+      }
+  }
+  delay(1000);
+}
