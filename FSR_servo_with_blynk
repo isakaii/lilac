@@ -1,0 +1,63 @@
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+#include <Servo.h>
+
+// you should get Auth Token in the Blynk App.
+// go to the Project Settings (nut icon).
+char auth[] = "CjMxPlFYO-SXllQnYKwVFxzIpC4kXGzI";
+
+// your WiFi credentials.
+// set password to "" for open networks.
+char ssid[] = "hojojo";
+char pass[] = "20402040";
+
+Servo servo; // servo object
+int pos; // int to store the slider value
+const int fsrPin = A0;
+int fsrReading = 0;
+BlynkTimer timer; // Announcing the timer
+
+void myTimerEvent()
+{
+  Blynk.virtualWrite(V5, pos);
+}
+
+void setup()
+{
+  // debug console
+  Serial.begin(9600);
+
+  // starts the connection with Blynk using the data provided at the top (Wi-Fi connection name, password, and auth token)
+  Blynk.begin(auth, ssid, pass);
+
+  servo.attach(16); // use pin 16 -> D0 on NodeMCU 
+  timer.setInterval(1000L,myTimerEvent);
+} 
+
+void loop()
+{
+  Blynk.run();
+  timer.run();
+  Serial.println(pos); // for debugging
+  fsrReading = analogRead(fsrPin);
+  Serial.print("fsr = ");
+  Serial.print(fsrReading);
+  if (fsrReading > 1000){
+    servo.write(120);
+    pos = 120;
+  }
+ else if (fsrReading > 600 && fsrReading <= 1000){
+    servo.write(90);
+    pos = 90;
+  }
+  else if (fsrReading > 200 && fsrReading <= 600){
+    servo.write(60);
+    pos = 60;
+  }
+
+  else {
+    servo.write(0);
+    pos = 0;
+  }
+
+}
